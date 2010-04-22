@@ -15,34 +15,32 @@ module Pancakes
         end
       end
     end
-    
-    class IntegerConverter < Base
-      def convert(raw_value)
-        raw_value.to_i
-      end
 
-      def deconvert(value, length, padstr=' ')
-        super(value, length, padstr, :right)
-      end
-    end
-    
-    class FloatConverter < Base
-      def convert(raw_value)
-        raw_value.to_f
-      end
-
-      def deconvert(value, length, padstr=' ')
-        super(value, length, padstr, :right)
-      end
-    end
-    
     class StrippingConverter < Base
       def convert(raw_value)
         raw_value.to_s.strip
       end
 
-      def deconvert(value, length, padstr=' ')
+      def deconvert(value, length, padstr)
         super(value, length, padstr, :left)
+      end
+    end
+
+    class NumericConverter < Base
+      def deconvert(value, length, padstr)
+        super(value, length, padstr, :right)
+      end
+    end
+    
+    class IntegerConverter < NumericConverter
+      def convert(raw_value)
+        raw_value.to_i
+      end
+    end
+    
+    class FloatConverter < NumericConverter
+      def convert(raw_value)
+        raw_value.to_f
       end
     end
     

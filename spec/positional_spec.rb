@@ -12,6 +12,11 @@ describe Pancakes::Positional::Field do
     @float.print.should == " 1.23"
     @string.print.should == "x "
   end
+
+  it "should accept pad strings" do
+    @integer = Pancakes::Positional::Field.new(" 1", :as => :integer, :position => 0..1, :padstr => '0')
+    @integer.print.should == "01"
+  end
 end
 
 describe Pancakes::Positional do

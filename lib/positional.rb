@@ -3,6 +3,23 @@ require "active_support"
 
 module Pancakes
   module Positional
+
+    class InputQueue #:nodoc:
+      def initialize(input)
+        @input = input
+        @buffer = nil
+      end
+
+      def next
+        result = @buffer || @input.gets
+        @buffer = nil
+        result
+      end
+
+      def push(line)
+        @buffer = line
+      end
+    end
     
     class Field
       attr_reader :options
@@ -20,7 +37,7 @@ module Pancakes
       end
 
       def print
-        converters.inject(value) { |val, conv| conv.deconvert(val, length) }
+        converters.inject(value) { |val, conv| conv.deconvert(val, length, padstr) }
       end
 
       def print?
@@ -37,6 +54,10 @@ module Pancakes
 
       def end_pos
         position.last
+      end
+
+      def padstr
+        options[:padstr] || ' '
       end
 
       def length
@@ -59,6 +80,7 @@ module Pancakes
     module InstanceMethods
       def initialize(values={}, data=nil)
         @fields = {}
+        @children = {}
         @data = data
 
         set_fields_from_data
@@ -66,7 +88,9 @@ module Pancakes
       end
 
       def method_missing(method, *args)
-        if field = @fields[method]
+        if child = @children[method]
+          child
+        elsif field = @fields[method]
           field.value
         elsif (field_name = method.to_s.sub(/=$/, '').to_sym) && @fields[field_name]
           @fields[field_name] = Field.new(nil, @fields[field_name].options, args.first)
@@ -86,6 +110,22 @@ module Pancakes
         end
       end
 
+      def load_children(input_q)
+        while line = input_q.next
+          association_defs.each_pair do |name, opts|
+            if line.starts_with? opts[:key]
+              record_class = opts[:class] || self.class.const_get(name.to_s.classify)
+              child = record_class.new({}, line)
+              add_child(name, child)
+            end
+            # else
+            #   input_q.push line
+            #   break
+            # end
+          end
+        end
+      end
+
       private
 
       def set_fields_from_data
@@ -101,19 +141,42 @@ module Pancakes
       def field_defs
         self.class.field_defs
       end
+
+      def association_defs
+        self.class.association_defs
+      end
+
+      def add_child(name, child)
+        @children[name] ||= []
+        @children[name] << child
+      end
     end
 
     module ClassMethods
       def field_defs
         @field_defs ||= Hash.new({})
       end
+
+      def association_defs
+        @association_defs ||= Hash.new({})
+      end
       
       def load(data)
-        new({}, data)
+        data = StringIO.new(data) unless data.kind_of? StringIO
+
+        q = InputQueue.new(data)
+        first_line = q.next
+        record = new({}, first_line)
+        record.load_children(q)
+        record
       end
       
       def field(name, options={})
         field_defs[name.to_sym] = options
+      end
+
+      def has_many(name, options={})
+        association_defs[name.to_sym] = options
       end
     end
   end
