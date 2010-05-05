@@ -20,7 +20,7 @@ describe Pancakes::Positional::Field do
 end
 
 describe Pancakes::Positional do
-  DATA = <<END
+  WIDGET_DATA = <<END
 01234 67 9
 END
 
@@ -33,7 +33,7 @@ END
   end
 
   before :each do
-    @widget = Widget.load(DATA)
+    @widget = Widget.load(WIDGET_DATA)
   end
 
   it "should parse string fields" do

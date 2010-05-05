@@ -1,7 +1,7 @@
 require File.expand_path(File.dirname(__FILE__) + '/spec_helper')
 
 describe "Positional relations" do
-  DATA = <<END
+  ORDER_DATA = <<END
 ORD3456
 ORD_Lab
 ORD_Lcd
@@ -17,7 +17,7 @@ END
   end
 
   before :each do
-    @order = Order.load(DATA)
+    @order = Order.load(ORDER_DATA)
   end
 
   it "should handle one to many relationships" do
