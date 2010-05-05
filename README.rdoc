@@ -1,16 +1,50 @@
 = pancakes
 
-Description goes here.
+Parse fixed width files into Ruby object model.
 
-== Note on Patches/Pull Requests
- 
-* Fork the project.
-* Make your feature addition or bug fix.
-* Add tests for it. This is important so I don't break it in a
-  future version unintentionally.
-* Commit, do not mess with rakefile, version, or history.
-  (if you want to have your own version, that is fine but bump version in a commit by itself I can ignore when I pull)
-* Send me a pull request. Bonus points for topic branches.
+== DESCRIPTION
+
+== FEATURES/PROBLEMS:
+
+* Friendly DSL
+* Map fixed width fields to Ruby attributes
+* Key based relationships - has_one, has_many
+
+== SYNOPSIS:
+
+Fixed width file order.txt:
+  ORD         123
+  ORD_HEADER  a special order
+  ORD_L       1    car engine400.99
+  ORD_L       2    toothpick   1.99
+
+Ruby code to parse above file:
+  class Order < Pancakes::PositionalPancake
+    field :order_id, :position => 12..16
+   
+    has_one  :order_header, :key => "ORD_HEADER"
+    has_many :order_lines,  :key => "ORD_L"
+  end
+   
+  class OrderHeader < Pancakes::PositionalPancake
+    field :description, :position => 12..21
+  end
+   
+  class OrderLine < Pancakes::PositionalPancake
+    field :line_num,    :start => 12..16, :as => :integer
+    field :description, :start => 17..26
+    field :price,       :start => 27..32, :as => :float
+  end
+   
+  lines = File.read("order.txt") 
+  order = Order.load(lines)
+   
+  puts order.order_id                 # => '123'
+  puts order.order_header.description # => 'a special order'
+   
+  order.order_lines.each do |order_line|
+    puts "line num: #{order_line.line_num}, price: #{order_line.price}"
+  end  
 
 == Copyright
 
