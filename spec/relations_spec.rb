@@ -1,4 +1,5 @@
 require File.expand_path(File.dirname(__FILE__) + '/spec_helper')
+require "stringio"
 
 describe "Positional relations" do
   ORDER_DATA = <<END
@@ -9,7 +10,7 @@ END
 
   class Order < Pancakes::PositionalPancake
     field :data, :position => 3..6
-     has_many :order_lines, :key => "ORD_L"
+    has_many :order_lines, :key => "ORD_L"
   end
 
   class OrderLine < Pancakes::PositionalPancake
@@ -25,5 +26,23 @@ END
     @order.order_lines.size.should == 2
     @order.order_lines.first.data.should == 'ab'
     @order.order_lines.last.data.should == 'cd'
+  end
+
+  MANY_ORDERS_DATA = <<END
+ORD1234
+ORD_Lab
+ORD_Lcd
+ORD5678
+ORD_Lef
+ORD_Lgh
+END
+
+  class OrderContainer < Pancakes::PositionalPancake
+    has_many :orders, :key => "ORD"
+  end
+
+  it "should load many orders" do
+    @orders = OrderContainer.load(ORDER_DATA)
+    @orders.orders.size.should == 2
   end
 end

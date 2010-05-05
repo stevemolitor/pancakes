@@ -1,26 +1,9 @@
 require "converters"
+require "input_queue"
 require "active_support"
 
 module Pancakes
   module Positional
-
-    class InputQueue #:nodoc:
-      def initialize(input)
-        @input = input
-        @buffer = nil
-      end
-
-      def next
-        result = @buffer || @input.gets
-        @buffer = nil
-        result
-      end
-
-      def push(line)
-        @buffer = line
-      end
-    end
-    
     class Field
       attr_reader :options
 
@@ -111,17 +94,17 @@ module Pancakes
       end
 
       def load_children(input_q)
-        while line = input_q.next
+        child_keys = association_defs.values.map { |opts| opts[:key] }
+        
+        while line = input_q.pop
+          child_added = false
           association_defs.each_pair do |name, opts|
-            if line.starts_with? opts[:key]
+            other_child_keys = child_keys.reject { |k| k == opts[:key] }
+            if line.starts_with?(opts[:key]) && !other_child_keys.detect { |k| line.starts_with?(k) }
               record_class = opts[:class] || self.class.const_get(name.to_s.classify)
               child = record_class.new({}, line)
               add_child(name, child)
             end
-            # else
-            #   input_q.push line
-            #   break
-            # end
           end
         end
       end
@@ -164,8 +147,8 @@ module Pancakes
       def load(data)
         data = StringIO.new(data) unless data.kind_of? StringIO
 
-        q = InputQueue.new(data)
-        first_line = q.next
+        q = Util::InputQueue.new(data)
+        first_line = q.pop
         record = new({}, first_line)
         record.load_children(q)
         record
