@@ -19,6 +19,7 @@ END
 
   before :each do
     @order = Order.load(ORDER_DATA)
+    puts "loaded order"
   end
 
   it "should handle one to many relationships" do

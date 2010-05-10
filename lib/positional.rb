@@ -97,13 +97,12 @@ module Pancakes
         child_keys = association_defs.values.map { |opts| opts[:key] }
         
         while line = input_q.pop
-          child_added = false
           association_defs.each_pair do |name, opts|
             other_child_keys = child_keys.reject { |k| k == opts[:key] }
             if line.starts_with?(opts[:key]) && !other_child_keys.detect { |k| line.starts_with?(k) }
               record_class = opts[:class] || self.class.const_get(name.to_s.classify)
               child = record_class.new({}, line)
-              add_child(name, child)
+              add_child(name, child, opts[:cardinality])
             end
           end
         end
@@ -129,9 +128,14 @@ module Pancakes
         self.class.association_defs
       end
 
-      def add_child(name, child)
-        @children[name] ||= []
-        @children[name] << child
+      def add_child(name, child, cardinality)
+        case cardinality
+        when :one
+          @children[name] = child
+        else # :many
+          @children[name] ||= []
+          @children[name] << child
+        end
       end
     end
 
@@ -149,9 +153,10 @@ module Pancakes
 
         q = Util::InputQueue.new(data)
         first_line = q.pop
-        record = new({}, first_line)
-        record.load_children(q)
-        record
+
+        returning new({}, first_line) do |record|
+          record.load_children(q)
+        end
       end
       
       def field(name, options={})
@@ -159,6 +164,16 @@ module Pancakes
       end
 
       def has_many(name, options={})
+        define_association(name, options.merge(:cardinality => :many))
+      end
+
+      def has_one(name, options={})
+        define_association(name, options.merge(:cardinality => :one))
+      end
+
+      private
+
+      def define_association(name, options)
         association_defs[name.to_sym] = options
       end
     end
