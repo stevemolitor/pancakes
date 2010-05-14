@@ -10,7 +10,7 @@ END
 
   class Order < Pancakes::PositionalPancake
     field :data, :position => 3..6
-    field :not_present, :position => 10..20
+    field :not_present, :position => 100..110
     has_many :order_lines, :key => "ORD_L"
     has_many :not_present_children, :key => "NOT_HERE"
   end
@@ -31,7 +31,7 @@ END
   end
 
   it "should handle missing data" do
-    #    @order.not_present.should be_nil
+    @order.not_present.should == ''
     @order.not_present_children.should be_empty
   end
 
