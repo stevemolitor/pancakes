@@ -73,14 +73,22 @@ module Pancakes
       def method_missing(method, *args)
         if child = @children[method]
           child
-        elsif field = @fields[method]
-          field.value
-        elsif (field_name = method.to_s.sub(/=$/, '').to_sym) && @fields[field_name]
-          @fields[field_name] = Field.new(nil, @fields[field_name].options, args.first)
-          @fields[field_name].value
+        # elsif field = @fields[method]
+        #   field.value
+        # elsif (field_name = method.to_s.sub(/=$/, '').to_sym) && @fields[field_name]
+        #   @fields[field_name] = Field.new(nil, @fields[field_name].options, args.first)
+        #   @fields[field_name].value
         else
           super
         end
+      end
+
+      def get_field_value(name, options)
+        field = @fields[name]
+        unless field
+          field = @fields[name] = Positional::Field.new(@data, options)
+        end
+        field.value
       end
 
       def print(padstr=' ')
@@ -149,7 +157,7 @@ module Pancakes
       end
       
       def load(data)
-        data = StringIO.new(data) unless data.kind_of? StringIO
+        data = StringIO.new(data) if data.kind_of? String
 
         q = Util::InputQueue.new(data)
         first_line = q.pop
@@ -160,7 +168,16 @@ module Pancakes
       end
       
       def field(name, options={})
-        field_defs[name.to_sym] = options
+        field_defs[name] = options
+
+        define_method(name) do
+          @fields[name] && @fields[name].value || nil
+        end
+
+        define_method("#{name}=") do |value|
+          @fields[name] = Field.new(nil, @fields[name].options, value)
+          @fields[name].value
+        end
       end
 
       def has_many(name, options={})

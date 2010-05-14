@@ -10,7 +10,9 @@ END
 
   class Order < Pancakes::PositionalPancake
     field :data, :position => 3..6
+    field :not_present, :position => 10..20
     has_many :order_lines, :key => "ORD_L"
+    has_many :not_present_children, :key => "NOT_HERE"
   end
 
   class OrderLine < Pancakes::PositionalPancake
@@ -19,7 +21,6 @@ END
 
   before :each do
     @order = Order.load(ORDER_DATA)
-    puts "loaded order"
   end
 
   it "should handle one to many relationships" do
@@ -27,6 +28,11 @@ END
     @order.order_lines.size.should == 2
     @order.order_lines.first.data.should == 'ab'
     @order.order_lines.last.data.should == 'cd'
+  end
+
+  it "should handle missing data" do
+    # @order.not_present.should be_nil
+    # @order.not_present_children.should be_empty
   end
 
   MANY_ORDERS_DATA = <<END
