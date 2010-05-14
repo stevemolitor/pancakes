@@ -70,19 +70,6 @@ module Pancakes
         set_fields_from_values(values)
       end
 
-      def method_missing(method, *args)
-        if child = @children[method]
-          child
-        # elsif field = @fields[method]
-        #   field.value
-        # elsif (field_name = method.to_s.sub(/=$/, '').to_sym) && @fields[field_name]
-        #   @fields[field_name] = Field.new(nil, @fields[field_name].options, args.first)
-        #   @fields[field_name].value
-        else
-          super
-        end
-      end
-
       def get_field_value(name, options)
         field = @fields[name]
         unless field
@@ -192,10 +179,11 @@ module Pancakes
 
       def define_association(name, options)
         association_defs[name.to_sym] = options
+        define_method(name) { @children[name] }
       end
     end
   end
-
+  
   class PositionalPancake
     include Positional::InstanceMethods
     extend Positional::ClassMethods

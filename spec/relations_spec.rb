@@ -31,8 +31,8 @@ END
   end
 
   it "should handle missing data" do
-    # @order.not_present.should be_nil
-    # @order.not_present_children.should be_empty
+#    @order.not_present.should be_nil
+#    @order.not_present_children.should be_empty
   end
 
   MANY_ORDERS_DATA = <<END
