@@ -58,7 +58,7 @@ module Pancakes
           end
         end
       end
-    end
+    end # Pancakes::Positional::Field
 
     module InstanceMethods
       def initialize(values={}, data=nil)
@@ -70,17 +70,9 @@ module Pancakes
         set_fields_from_values(values)
       end
 
-      def get_field_value(name, options)
-        field = @fields[name]
-        unless field
-          field = @fields[name] = Positional::Field.new(@data, options)
-        end
-        field.value
-      end
-
       def print(padstr=' ')
         line_length = @fields.values.map(&:end_pos).sort.last + 1
-
+        
         returning(padstr * line_length) do |s|
           @fields.values.select(&:print?).sort_by(&:start_pos).each do |f|
             s[f.start_pos..f.end_pos] = f.print
@@ -132,13 +124,13 @@ module Pancakes
           @children[name] << child
         end
       end
-    end
-
+    end # Pancakes::Positional::InstanceMethods
+    
     module ClassMethods
       def field_defs
         @field_defs ||= Hash.new({})
       end
-
+      
       def association_defs
         @association_defs ||= Hash.new({})
       end
@@ -167,26 +159,28 @@ module Pancakes
         end
       end
 
-      def has_many(name, options={})
-        define_association(name, options.merge(:cardinality => :many))
-      end
-
       def has_one(name, options={})
         define_association(name, options.merge(:cardinality => :one))
+        define_method(name) { @children[name] }
+      end
+
+      def has_many(name, options={})
+        define_association(name, options.merge(:cardinality => :many))
+        define_method(name) { @children[name] ||= [] }
       end
 
       private
 
       def define_association(name, options)
         association_defs[name.to_sym] = options
-        define_method(name) { @children[name] }
       end
-    end
-  end
-  
+    end # Pancakes::Positional::ClassMethods
+
+  end # Pancakes::Positional
+
   class PositionalPancake
     include Positional::InstanceMethods
     extend Positional::ClassMethods
   end
 
-end
+end # Pancakes

@@ -28,9 +28,7 @@ END
     field :integer, :position => 0..1, :as => :integer
     field :string,  :position => 2..3, :as => :string
     field :proc,    :position => 2..3, :as => lambda { |raw_value| raw_value.to_i * 2  }, :print => false
-    field :money,   :position => 2..3, :as => [ :integer, lambda { |i|
-                                                  
-                                                  i / 100.0  } ], :print => false
+    field :money,   :position => 2..3, :as => [ :integer, lambda { |i| i / 100.0  } ], :print => false
     field :default, :position => 5..8
   end
 
