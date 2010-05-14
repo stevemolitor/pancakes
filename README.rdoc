@@ -36,15 +36,16 @@ Ruby code to parse above file:
     field :price,       :start => 27..32, :as => :float
   end
    
-  lines = File.read("order.txt") 
-  order = Order.load(lines)
+  File.open("order.txt") do |f|
+    order = Order.load(f)
    
-  puts order.order_id                 # => '123'
-  puts order.order_header.description # => 'a special order'
+    puts order.order_id                 # => '123'
+    puts order.order_header.description # => 'a special order'
    
-  order.order_lines.each do |order_line|
-    puts "line num: #{order_line.line_num}, price: #{order_line.price}"
-  end  
+    order.order_lines.each do |order_line|
+      puts "line num: #{order_line.line_num}, price: #{order_line.price}"
+    end
+  end
 
 == Copyright
 
