@@ -1,5 +1,4 @@
 require "converters"
-require "input_queue"
 require "active_support"
 
 module Pancakes
@@ -80,10 +79,10 @@ module Pancakes
         end
       end
 
-      def load_children(input_q)
+      def load_children(data)
         child_keys = association_defs.values.map { |opts| opts[:key] }
         
-        while line = input_q.pop
+        while line = data.gets
           association_defs.each_pair do |name, opts|
             other_child_keys = child_keys.reject { |k| k == opts[:key] }
             if line.starts_with?(opts[:key]) && !other_child_keys.detect { |k| line.starts_with?(k) }
@@ -137,12 +136,10 @@ module Pancakes
       
       def load(data)
         data = StringIO.new(data) if data.kind_of? String
-
-        q = Util::InputQueue.new(data)
-        first_line = q.pop
+        first_line = data.gets
 
         returning new({}, first_line) do |record|
-          record.load_children(q)
+          record.load_children(data)
         end
       end
       
